@@ -1,0 +1,21 @@
+{
+    "name": "bporcelli/query-monitor-flamegraph",
+    "description": "Port of humanmade/query-monitor-flamegraph that uses xdebug instead of xhprof to generate traces.",
+    "type": "project",
+    "license": "GPL-2",
+    "authors": [
+        {
+            "name": "Brett Porcelli",
+            "email": "brettporcelli@gmail.com"
+        }
+    ],
+    "require": {
+        "bporcelli/php-flamegraph": "0.0.1"
+    },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "git@github.com:bporcelli/php-flamegraph.git"
+        }
+    ]
+}

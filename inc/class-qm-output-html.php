@@ -2,6 +2,8 @@
 
 namespace QM_Flamegraph;
 
+use FlameGraph\FlameGraph;
+
 /*
 Copyright 2009-2015 John Blackbourn
 
@@ -24,50 +26,38 @@ class QM_Output_Html extends \QM_Output_Html {
 		add_filter( 'qm/output/menus', array( $this, 'admin_menu' ), 110 );
 	}
 
+	public function name() {
+		return __( 'Flamegraph', 'query-monitor' );
+	}
+
 	public function output() {
-		$time = (int) ini_get( 'xhprof.sampling_interval' );
+		$stacks = $this->collector->get_data();
 
-		if ( ! $time ) {
-			$time = 100000;
-		}
 		?>
-
 		<div class="qm" id="qm-flamegraph">
-			<div class="timestack-flamegraph">
-
-			</div>
-			<div id="qm-flamegraph-data" style="display: none"><?php echo json_encode( $this->collector->get_data()[0] ); ?></div>
-			<style>
-				.d3-flame-graph-tip {
-					z-index: 99999;
+			<?php
+			if ( $stacks ) {
+				try {
+					echo FlameGraph::build( $stacks )
+						->to_svg()
+						->get();
+				} catch ( \Exception $ex ) {
+					printf(
+						'<p style="padding: 12px !important;">%s %s</p>',
+						__( 'Failed to generate flamegraph:', 'query-monitor-flamegraph' ),
+						$ex->getMessage()
+					);
 				}
-			</style>
-			<script type="text/javascript">
-				var flameGraph = d3.flameGraph()
-					.height(540)
-					//.width(960)
-					.cellHeight(18)
-					.transitionDuration(350)
-					.transitionEase('cubic-in-out')
-					//.sort(true)
-					.title("Flamegraph (<?php echo sprintf( '%dms intervals', $time / 1000 ) ?>)")
-
-				// Example on how to use custom tooltips using d3-tip.
-				var tip = d3.tip()
-					.direction("s")
-					.offset([8, 0])
-					.attr('class', 'd3-flame-graph-tip')
-					.html(function(d) { return "name: " + d.name + ", time: " + d.value + 'ms'; });
-
-				flameGraph.tooltip(tip);
-				data = JSON.parse( document.getElementById( 'qm-flamegraph-data').innerHTML )
-					d3.select(".timestack-flamegraph")
-					.datum(data)
-					.call(flameGraph);
-			</script>
+			} else {
+				?>
+				<p style="padding: 12px !important;">
+					<?php esc_html_e( 'Trigger a function trace with xdebug to generate a flamegraph.', 'query-monitor-flamegraph' ); ?>
+				</p>
+				<?php
+			}
+			?>
 		</div>
 		<?php
-
 	}
 
 }

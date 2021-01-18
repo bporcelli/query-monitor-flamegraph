@@ -21,71 +21,99 @@ class QM_Collector extends \QM_Collector {
 
 	public $id = 'flamegraph';
 
-	public function name() {
-		return __( 'Flamegraph', 'query-monitor' );
-	}
-
-	public function __construct() {
-		if ( ! function_exists( 'xhprof_sample_enable' ) ) {
-			return;
-		}
-	}
-
 	public function process() {
 
-		if ( ! function_exists( 'xhprof_sample_disable' ) ) {
+		if ( ! function_exists( 'xdebug_stop_trace' ) ) {
 			return;
 		}
 
-		$stack = xhprof_sample_disable();
+		$trace_file = xdebug_stop_trace();
 
-		$this->data = $this->folded_to_hierarchical( $stack );
-	}
-
-	protected function folded_to_hierarchical( $stack ) {
-
-		$nodes = array( (object) array(
-			'name' => 'main()',
-			'value' => 1,
-			'children' => [],
-		) );
-
-		foreach ( $stack as $time => $call_stack ) {
-			$call_stack = explode( '==>', $call_stack );
-
-
-			$nodes = $this->add_children_to_nodes( $nodes, $call_stack );
-		}
-
-		return $nodes;
+		$this->data = $this->process_xdebug_trace( $trace_file );
 	}
 
 	/**
-	 * Accepts [ Node, Node ], [ main, wp-settings, sleep ]
+	 * Adapted from https://github.com/brendangregg/FlameGraph/blob/master/stackcollapse-xdebug.php.
 	 */
-	protected function add_children_to_nodes( $nodes, $children ) {
-		$last_node = $nodes ? $nodes[ count( $nodes ) - 1 ] : null;
-		$this_child = $children[0];
-		$time = (int) ini_get( 'xhprof.sampling_interval' );
+	protected function process_xdebug_trace( $filename ) {
 
-		if ( ! $time ) {
-			$time = 100000;
-		}
-		if ( $last_node && $last_node->name === $this_child ) {
-			$node = $last_node;
-			$node->value += ( $time / 1000 );
-		} else {
-			$nodes[] = $node = (object) array(
-				'name'	=> $this_child,
-				'value' => $time / 1000,
-				'children' => array(),
-			);
-		}
-		if ( count( $children ) > 1 ) {
-			$node->children = $this->add_children_to_nodes( $node->children, array_slice( $children, 1 ) );
+		$handle = fopen( $filename, 'r' );
+
+		if ( ! $handle ) {
+			return array();
 		}
 
-		return $nodes;
+		// Loop till we find TRACE START.
+		while ( $l = fgets( $handle ) ) {
+		    if ( 0 === strpos( $l, 'TRACE START' ) ) {
+		        break;
+		    }
+		}
+		
+		$stacks          = array();
+		$current_stack   = array();
+		$was_exit        = false;
+		$prev_start_time = 0;
 
+	    while ( $l = fgets( $handle ) ) {
+	        $is_eo_trace = false !== strpos( $l, 'TRACE END' );
+
+	        if ( $is_eo_trace ) {
+	            break;
+	        }
+
+	        $parts = explode( "\t", $l );
+	        list( $level, $fn_no, $is_exit, $time ) = $parts;
+
+	        if ( $is_exit ) {
+	            if ( empty( $current_stack ) ) {
+	                continue;
+	            }
+
+	            $this->add_current_stack_to_stacks( $current_stack, $time - $prev_start_time, $stacks );
+	            array_pop( $current_stack );
+	        } else {
+	           	$func_name = $parts[5];
+
+        		// Optionally apply patch from https://daniellockyer.com/php-flame-graphs/.
+	        	if ( apply_filters( 'qm_flamegraph_append_filenames', true ) ) {
+		            if ( in_array( $func_name, array( 'require', 'require_once', 'include', 'include_once' ) ) ) {
+						$filename  = $parts[7];
+						$func_name = "{$func_name} ({$filename})";
+					}
+	        	}
+
+	            if ( ! empty( $current_stack ) ) {
+	                $this->add_current_stack_to_stacks( $current_stack, $time - $prev_start_time, $stacks );
+	            }
+
+	            $current_stack[] = $func_name;
+	        }
+
+	        $prev_start_time = $time;
+	    }
+
+	    fclose( $handle );
+
+	    $final_stacks = array();
+	    foreach ( $stacks as $stack => $time ) {
+	    	$final_stacks[] = "{$stack} {$time}";
+	    }
+
+	    return $final_stacks;
 	}
+
+	protected function add_current_stack_to_stacks( $stack, $dur, &$stacks ) {
+		// With this scale factor every microsecond of execution is counted as one sample.
+		$scale_factor = 1000000;
+		$collapsed    = implode( ';', $stack );
+		$duration     = $scale_factor * $dur;
+
+		if ( isset( $stacks[ $collapsed ] ) ) {
+			$stacks[ $collapsed ] += $duration;
+		} else {
+			$stacks[ $collapsed ] = $duration;
+		}
+	}
+
 }

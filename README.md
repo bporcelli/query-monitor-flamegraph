@@ -1,40 +1,24 @@
 <table>
 	<tr>
-		<td>
+		<td colspan="2">
 			<strong>Query Monitor Flamegraph</strong><br />
-			This Query Monitor extension will add profiling framegraphs to Query Monitor via the <a href="https://pecl.php.net/package/xhprof">xhprof</a> PHP extension.
+			This Query Monitor extension will add profiling framegraphs to Query Monitor via the <a href="https://pecl.php.net/package/xdebug">xdebug</a> PHP extension.
 		</td>
-		<td>
-				</td>
 	</tr>
 	<tr>
-		<td>
-			A <strong><a href="https://hmn.md/">Human Made</a></strong> project. Maintained by @joehoyle.
-		</td>
-		<td align="center">
-			<img src="https://hmn.md/content/themes/hmnmd/assets/images/hm-logo.svg" width="100" />
+		<td colspan="2">
+			Forked from https://github.com/humanmade/query-monitor-flamegraph/.
 		</td>
 	</tr>
 </table>
 
-![](https://cloud.githubusercontent.com/assets/161683/18526915/87445e9c-7a90-11e6-8d87-3624c3268a1f.gif)
-
 ## Install Instructions
 
 1. Have the [Query Monitor](https://github.com/johnbillion/query-monitor) plugin installed and activated.
-1. Have the [xhprof](https://pecl.php.net/package/xhprof) PHP extension installed.
+1. Have the [xdebug](https://pecl.php.net/package/xdebug) PHP extension installed.
 1. Install this plugin :)
-1. Add a call to `xhprof_sample_enable();` to your `wp-config.php`
+1. Trigger an xdebug trace.
 
-## Versions of XHProf
+## Note on PHP FlameGraph
 
-Unfortunately XHProf is not actively maintained and has some shortcomings. Flamegraph makes use of the `xhprof_sample_enable()` function which by is hardcoded to 100ms intervals with the official XHProf extension. There's several forks and updates to XHProf, refer to the table below:
-
-|Project|Compatible|Notes|
-|---|---|---|
-|[XHProf Official](https://pecl.php.net/package/xhprof)|yes|Note: Doesn't support PHP 7. Is restricted to 100ms interval sampling, making it useless for the most part.|
-|[XHProf with configurable sampling](https://github.com/phacility/xhprof/pull/80)|yes|Note: Doesn't support PHP 7. Best solution! However, you'll need to build from source.|
-|[Tideways](https://tideways.io/profiler/xhprof-for-php7-php5.6)|no|Tideways is an XHProf fork, however doesn't support `*_sample_enabled`. See https://github.com/tideways/php-profiler-extension/issues/26.|
-|[XHProf PHP7 fork](https://github.com/RustJason/xhprof/tree/php7)|no|Doesn't support `xhprof_sample_enabled`|
-
-If you know of any other XHProf forks or compatible output libraries, be sure to let me know!
+This fork uses [php-flamegraph](https://github.com/bporcelli/php-flamegraph) instead of [d3-flame-graph](https://github.com/spiermar/d3-flame-graph) to generate the flame graph, since the former was crashing my browser on a moderately powered machine.

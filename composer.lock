@@ -1,0 +1,54 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
+        "This file is @generated automatically"
+    ],
+    "content-hash": "6df1a209dca9ea62c1ba16e1dd4e6294",
+    "packages": [
+        {
+            "name": "bporcelli/php-flamegraph",
+            "version": "0.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/bporcelli/php-flamegraph.git",
+                "reference": "0829a23df1ddc5f11cc01c25c5f0668b31198639"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/bporcelli/php-flamegraph/zipball/0829a23df1ddc5f11cc01c25c5f0668b31198639",
+                "reference": "0829a23df1ddc5f11cc01c25c5f0668b31198639",
+                "shasum": ""
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "FlameGraph\\": "src/"
+                }
+            },
+            "license": [
+                "GPL-2.0"
+            ],
+            "authors": [
+                {
+                    "name": "Brett Porcelli",
+                    "email": "brettporcelli@gmail.com"
+                }
+            ],
+            "description": "PHP port of FlameGraph.pl",
+            "support": {
+                "source": "https://github.com/bporcelli/php-flamegraph/tree/0.0.1",
+                "issues": "https://github.com/bporcelli/php-flamegraph/issues"
+            },
+            "time": "2021-01-18T22:39:15+00:00"
+        }
+    ],
+    "packages-dev": [],
+    "aliases": [],
+    "minimum-stability": "stable",
+    "stability-flags": [],
+    "prefer-stable": false,
+    "prefer-lowest": false,
+    "platform": [],
+    "platform-dev": []
+}
